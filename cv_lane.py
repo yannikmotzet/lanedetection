@@ -4,6 +4,7 @@
 
 import cv2
 import numpy as np
+import random
 
 # video source
 cap = cv2.VideoCapture('lane_detection.mp4')
@@ -32,22 +33,46 @@ while(cap.isOpened()):
     matrix = cv2.getPerspectiveTransform(pts1, pts2)
 
     result = cv2.warpPerspective(frame, matrix, (645, 480))
-    contour = result.copy()
+    contour_image = result.copy()
 
-    # contour detection
-    grey = cv2.cvtColor(contour, cv2.COLOR_RGB2GRAY)
+    # binary image
+    grey = cv2.cvtColor(contour_image, cv2.COLOR_RGB2GRAY)
     _, threshold = cv2.threshold(grey, 200, 255, cv2.THRESH_BINARY)
+    
+    # contour detection
     contours, _ = cv2.findContours(
-        threshold, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    # draw contours
-    for cnt in contours:
-        cv2.drawContours(contour, [cnt], 0, (0, 0, 255), 3)
+        threshold, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)    #CHAIN_APPROX_SIMPLE
 
+    # print(contours[0].shape)
+    # print(contours[0].shape[0])
+
+    number_of_countours = 0
+    for cnt in contours:
+        # b, g, r = random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)
+        b, g, r = 0, 0, 0
+        if cnt.shape[0] > 200:
+            print(cnt.shape[0])
+            number_of_countours += 1
+            if number_of_countours > 3:
+                b, g, r = random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)
+                print("something went wrong")
+            for l in range(cnt.shape[0]):
+                cv2.circle(contour_image, (cnt[l, 0, 0] , cnt[l, 0, 1]), 1, (b, g, r), -1)
+    print("number contours: " + str(number_of_countours))
+
+    
+    # # draw contours
+    # for cnt in contours:
+    #     cv2.drawContours(contour_image, [cnt], 0, (0, 0, 255), 3)
+
+    # cv2.drawContours(contour_image, contours, 1, (0, 0, 255), 3)
+
+    
     # output windows
-    cv2.imshow('input', frame)
-    cv2.imshow('binary', threshold)
-    cv2.imshow('perspective transformation', result)
-    cv2.imshow('contours', contour)
+    # cv2.imshow('input', frame)
+    # cv2.imshow('binary', threshold)
+    # cv2.imshow('perspective transformation', result)
+    cv2.imshow('contours', contour_image)
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
